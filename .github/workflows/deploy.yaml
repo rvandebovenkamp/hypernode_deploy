@@ -3,8 +3,7 @@ name: Build and deploy application
 on:
   push:
     branches:
-      - 'master'  # Your main/master/production branch
-      - 'staging' # Your staging/acceptance branch
+      - 'main'  # Your main/master/production branch
 env:
   COMPOSER_CACHE_DIR: /tmp/composer-cache
 
