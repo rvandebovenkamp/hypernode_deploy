@@ -1,0 +1,37 @@
+name: Deploy application to production
+
+on:
+  push:
+    branches:
+      - 'master'  # production branch
+
+jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Concurrency takes any arbitrary value, but this prevents multiple deployments happening at the same time.
+    # We set the concurrency to production for this deployment workflow.
+    concurrency: production
+    environment:
+      name: production
+      url: https://magento2.testhipex.nl
+    container: quay.io/hypernode/deploy:3-php8.1-node18
+    steps:
+    - uses: actions/checkout@v3
+    - name: download build artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: deployment-build
+        path: build/
+    - uses: actions/cache@v3
+      with:
+        path: /tmp/composer-cache
+        key: ${{ runner.os }}-composer
+    - uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - run: mkdir -p $HOME/.ssh
+    - run: hypernode-deploy deploy production -vvv  # Deploy production stage defined in deploy.php
