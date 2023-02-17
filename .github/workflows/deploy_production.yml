@@ -3,8 +3,8 @@ name: Deploy application to production
 on:
   push:
     branches:
-      - 'master'  # production branch
-      workflow_dispatch: # Put here!!
+      - 'main'  # production branch
+
 
 jobs:
   build:
