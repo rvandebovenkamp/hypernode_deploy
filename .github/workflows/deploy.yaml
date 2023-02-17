@@ -1,21 +1,18 @@
-# This file would need to be placed in .github/workflows/deploy.yaml for example
-# In this example, the branches 'master' and 'staging' are used for the production and staging branch, respectively.
-
-name: Build and Deploy
+name: Build and deploy application
 
 on:
   push:
     branches:
-      - 'master'
-      - 'staging'
-
+      - 'master'  # Your main/master/production branch
+      - 'staging' # Your staging/acceptance branch
 env:
   COMPOSER_CACHE_DIR: /tmp/composer-cache
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: quay.io/hypernode/deploy:2.0-php8.1-node18
+    # Here we use the Hypernode Deploy v3 image with PHP 8.1 and Node.js 18
+    container: quay.io/hypernode/deploy:3.0-php8.1-node18
     steps:
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
@@ -33,11 +30,15 @@ jobs:
         with:
           name: deployment-build
           path: build/build.tgz
-
+...
+jobs:
+  build:
+    ...
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    container: quay.io/hypernode/deploy:2.0-php8.1-node18
+    # Here we use the Hypernode Deploy v3 image with PHP 8.1 and Node.js 18
+    container: quay.io/hypernode/deploy:3.0-php8.1-node18
     steps:
       - uses: actions/checkout@v2
       - name: download build artifact
@@ -49,10 +50,10 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - run: mkdir -p $HOME/.ssh
-      - name: deploy to staging
+      - name: deploy to staging     # Staging deployment happens here
         if: github.ref == 'refs/heads/staging'
         run: hypernode-deploy deploy staging -vvv
-      - name: deploy to production
+      - name: deploy to production  # Production deployment happens here
         if: github.ref == 'refs/heads/master'
         run: hypernode-deploy deploy production -vvv
       - name: cleanup acquired resources
