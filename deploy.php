@@ -1,21 +1,32 @@
 <?php
-
 namespace Hypernode\DeployConfiguration;
 
-/**
- * Start by setting up the configuration
- *
- * The magento 2 configuration contains some default configuration for shared folders / files and running installers
- * @see ApplicationTemplate\Magento2::initializeDefaultConfiguration
- */
-$configuration = new ApplicationTemplate\Magento2(['en_GB', 'nl_NL']);
+$configuration = new ApplicationTemplate\Magento2(
+ // Your GIT repository url
+ 'git@github.com:rvandebovenkamp/hypernode_deploy.git',
+ // Frontend locales
+ ['nl_NL'],
+ // Backend locales
+ ['nl_NL']
+);
 
-$productionStage = $configuration->addStage('production', 'example.com');
-$productionStage->addServer('appname.hypernode.io');
+$stagingStage = $configuration->addStage('staging', 'magento2.testhipex.nl');
+$stagingStage->addServer('hntestrolf.hypernode.io');
 
-$testStage = $configuration->addStage('test', 'example.com');
-$testStage->addBrancherServer('appname')
-    ->setLabels(['stage=test', 'ci_ref=' . \getenv('GITHUB_RUN_ID') ?: 'none'])
-    ->setSettings(['cron_enabled' => false, 'supervisor_enabled' => false]);
+$configuration->setSharedFiles([
+    'app/etc/env.php',
+    'pub/errors/local.xml'
+]);
+$configuration->setSharedFolders([
+    'var/log',
+    'var/session',
+    'var/report',
+    'pub/media'
+]);
+
+$configuration->addDeployCommand(new Command\Deploy\Magento2\MaintenanceMode());
+$configuration->addDeployCommand(new Command\Deploy\Magento2\SetupUpgrade());
+$configuration->addDeployCommand(new Command\Deploy\Magento2\CacheFlush());
+
 
 return $configuration;
